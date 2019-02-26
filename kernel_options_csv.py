@@ -2,18 +2,51 @@
 
 import wget
 import tarfile
+import os
+from pathlib import Path
+import subprocess
+import shutil
 
-CSV_FILE_PATH = "/home/sixelinux/kernel_options.csv"
+HOME = str(Path.home())
+EXPERIMENT_DIR = "KERNEL_EXPERIMENTS"
+EXPERIMENT_DIR_PATH = HOME + '/' + EXPERIMENT_DIR
+CSV_FILE_PATH = EXPERIMENT_DIR_PATH + "/kernel_options.csv"
+MAKEFILE_PATCH_PATH = EXPERIMENT_DIR_PATH + "/makefile.patch"
 
 if __name__ == "__main__":
 
+    exp_dir = Path(EXPERIMENT_DIR_PATH)
+    
+    if not exp_dir.is_dir():
+        os.mkdir(EXPERIMENT_DIR)
+
+    shutil.copy("makefile.patch", EXPERIMENT_DIR_PATH)
+
+    os.chdir(EXPERIMENT_DIR_PATH)
     fichier = open(CSV_FILE_PATH, "w")
     fichier.write("Kernel_version, nb_options\n")
+    fichier.close() # TODO: find another solution if possible
+
     for i in range(21):
-        kernel_string = "4.{}.1".format(i)
-        wget_string = "http://cdn.kernel.org/pub/linux/kernel/v4.x/linux-{}.tar.xz".format(kernel_string)
-        print(wget_string)
-        linux_tar = wget.download(wget_string)
-        with tarfile.open(linux_tar) as f:
-            f.extractall('.')
+        kernel_string = "linux-4.{}.1".format(i)
+        kernel_path = EXPERIMENT_DIR_PATH + '/' + kernel_string
+
+        ker_dir = Path(kernel_path)
+        
+        if not ker_dir.is_dir():
+            wget_string = "http://cdn.kernel.org/pub/linux/kernel/v4.x/{}.tar.xz".format(kernel_string)
+            linux_tar = wget.download(wget_string)
+            with tarfile.open(linux_tar) as f:
+                f.extractall('.')
+            os.remove(linux_tar)
+        
+        fichier = open(CSV_FILE_PATH, "a")
         fichier.write("{}, ".format(kernel_string))
+        fichier.close() # TODO: find another solution if possible (we open and close too many times)
+        os.chdir(kernel_path)
+
+        str_patch = "patch -p1 < ../makefile.patch"
+        subprocess.call(str_patch, shell=True) # TODO: check result
+
+        str_make = "make scriptconfig SCRIPT=" + HOME + "/dev/kernel_options_count/count_options.py"
+        subprocess.call(str_make, shell=True) # TODO: check result
