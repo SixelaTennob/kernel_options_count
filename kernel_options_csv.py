@@ -18,16 +18,17 @@ if __name__ == "__main__":
     exp_dir = Path(EXPERIMENT_DIR_PATH)
     
     if not exp_dir.is_dir():
-        os.mkdir(EXPERIMENT_DIR)
+        os.mkdir(EXPERIMENT_DIR_PATH)
 
     shutil.copy("makefile.patch", EXPERIMENT_DIR_PATH)
 
     os.chdir(EXPERIMENT_DIR_PATH)
     fichier = open(CSV_FILE_PATH, "w")
     fichier.write("Kernel_version, nb_options\n")
-    fichier.close() # TODO: find another solution if possible
+    fichier.close()  # TODO: find another solution if possible
 
     for i in range(21):
+        os.chdir(EXPERIMENT_DIR_PATH)
         kernel_string = "linux-4.{}.1".format(i)
         kernel_path = EXPERIMENT_DIR_PATH + '/' + kernel_string
 
@@ -43,10 +44,11 @@ if __name__ == "__main__":
         fichier = open(CSV_FILE_PATH, "a")
         fichier.write("{}, ".format(kernel_string))
         fichier.close() # TODO: find another solution if possible (we open and close too many times)
+        # TODO: check if folder exists
         os.chdir(kernel_path)
 
         str_patch = "patch -p1 < ../makefile.patch"
-        subprocess.call(str_patch, shell=True) # TODO: check result
+        subprocess.call(str_patch, shell=True)  # TODO: check result
 
-        str_make = "make scriptconfig SCRIPT=" + HOME + "/dev/kernel_options_count/count_options.py"
-        subprocess.call(str_make, shell=True) # TODO: check result
+        str_make = "make scriptconfig SCRIPT=" + HOME + "/PycharmProjects/Kanalyzer2/count_options.py"
+        subprocess.call(str_make, shell=True)  # TODO: check result
