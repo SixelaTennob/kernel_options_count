@@ -52,3 +52,5 @@ if __name__ == "__main__":
 
         str_make = "make scriptconfig SCRIPT=" + HOME + "/PycharmProjects/Kanalyzer2/count_options.py"
         subprocess.call(str_make, shell=True)  # TODO: check result
+
+        shutil.rmtree(kernel_path)
