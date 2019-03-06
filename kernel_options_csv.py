@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     os.chdir(EXPERIMENT_DIR_PATH)
     fichier = open(CSV_FILE_PATH, "w")
-    fichier.write("Kernel_version, nb_options\n")
+    fichier.write("Kernel_version,ARCH,nb_options\n")
     fichier.close()  # TODO: find another solution if possible
 
     for i in range(21):
@@ -40,17 +40,26 @@ if __name__ == "__main__":
             with tarfile.open(linux_tar) as f:
                 f.extractall('.')
             os.remove(linux_tar)
-        
-        fichier = open(CSV_FILE_PATH, "a")
-        fichier.write("{}, ".format(kernel_string))
-        fichier.close() # TODO: find another solution if possible (we open and close too many times)
-        # TODO: check if folder exists
-        os.chdir(kernel_path)
 
-        str_patch = "patch -p1 < ../makefile.patch"
-        subprocess.call(str_patch, shell=True)  # TODO: check result
+    i = 0
+    for i in range(21):
+        os.chdir(EXPERIMENT_DIR_PATH)
+        kernel_string = "linux-4.{}.1".format(i)
+        kernel_path = EXPERIMENT_DIR_PATH + '/' + kernel_string
 
-        str_make = "make scriptconfig SCRIPT=" + HOME + "/PycharmProjects/Kanalyzer2/count_options.py"
-        subprocess.call(str_make, shell=True)  # TODO: check result
+        kernel_path_arch = kernel_path + "/arch/"
+        LIST_ARCH = next(os.walk(os.path.join(kernel_path_arch, '.')))[1]
+        for j in range(len(LIST_ARCH)):
+            fichier = open(CSV_FILE_PATH, "a")
+            fichier.write("{},{},".format(kernel_string, LIST_ARCH[j]))
+            fichier.close()  # TODO: find another solution if possible (we open and close too many times)
+            # TODO: check if folder exists
+            os.chdir(kernel_path)
 
-        shutil.rmtree(kernel_path)
+            str_patch = "patch -p1 < ../makefile.patch"
+            subprocess.call(str_patch, shell=True)  # TODO: check result
+
+            str_make = "make ARCH=" + LIST_ARCH[j] + " scriptconfig SCRIPT=" + HOME + "/PycharmProjects/Kanalyzer2/count_options.py"
+            subprocess.call(str_make, shell=True)  # TODO: check result
+
+    # shutil.rmtree(kernel_path)
